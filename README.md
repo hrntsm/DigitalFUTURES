@@ -1,4 +1,7 @@
-# DigitalFUTURES
+# 構造コンピュテーショナルデザインの基礎から先端 / STRUCTURAL COMPUTATIONAL DESIGN FROM BASIC TO ADVANCE
+
+<img src="https://github.com/hrntsm/DigitalFUTURES/blob/main/images/ResultModelPerspective.jpg?raw=true" width="45%">
+<img src="https://github.com/hrntsm/DigitalFUTURES/blob/main/images/TunnyResult%201920x1080.jpg?raw=true" width="45%">
 
 本ワークショップは平日の夜の3日間に短時間で行う講座と土曜日の構造コンピュテーショナルデザインの実践時間から構成されます。
 ソフトの操作等については基礎的な内容から始めるため特に必要ではないですが、アドバンストな内容にも触れるため Required software に加えて Python、C# に触れたことがあるとより理解が深まると思われます。
