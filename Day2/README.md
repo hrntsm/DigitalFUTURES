@@ -5,13 +5,27 @@ Karamba3D はユーロコードを基にしているため、C# を使って Kar
 
 ## C# の基礎
 
-環境構築がうまくいかないと困るので、以下のブラウザ上でC#を実行できるサービスを使って基礎について振れていきます。
+//TODO:下で Karamba3d カスタマイズするときに使っている機能を紹介する？ Method の out とか
 
-https://dotnetfiddle.net/
+環境構築がうまくいかないと困るので、以下のブラウザ上で C# を実行できるサービス [.NET Fiddle](https://dotnetfiddle.net/) を使って基礎について振れていきます。
 
-まずは Hello World の仕方は以下になります。
+まずプログラム言語を始める際のおなじみの Hello World の仕方は以下になります。https://dotnetfiddle.net/Ppx2zf
 
-<iframe width="100%" height="475" src="https://dotnetfiddle.net/Widget/CsCons" frameborder="0"></iframe>
+```cs
+using System;
+
+public class Program
+{
+  public static void Main()
+  {
+    Console.WriteLine("Hello World!");
+  }
+}
+```
+
+## Grasshopper のカスタムコンポーネントの作成
+
+TBD
 
 ## Karamba3D のカスタマイズ
 
@@ -178,12 +192,13 @@ public class Script_Instance : GH_ScriptInstance
       List<double> outG;
       List<double> outComp;
       string message;
+      //TODO: List の List は良くないのでは？
       List<List<double>> N;
-      List<List<double>> V;
+      List<List<double>> Q;
       List<List<double>> M;
 
       // nIterの分だけ断面の収束計算を行う
-      for (int i = 0; i < nIter; i++)
+      while (i < nIter)
       {
         // 最初に解析を実行
         model = k3d.Algorithms.AnalyzeThI(model, out maxDisp, out outG, out outComp, out message);
@@ -196,9 +211,10 @@ public class Script_Instance : GH_ScriptInstance
             continue;
 
           // 要素の応力を取得
-          BeamResultantForces.solve(model, new List<string> { elemInd.ToString() }, lcInd, 100, 1, out N, out V, out M);
+          BeamResultantForces.solve(model, new List<string> { elemInd.ToString() }, lcInd, 100, 1, out N, out Q, out M);
 
           // 断面検定
+          // TODO: 応力これであってる？ここでは梁が対象だから横座屈の検定式とかの日本基準関連の何かを入れられるか？そもそも検定にせん断入ってない
           foreach (var croSec in croSecs)
           {
             beam.crosec = croSec;
@@ -213,7 +229,9 @@ public class Script_Instance : GH_ScriptInstance
         // ここまでの処理で変更した断面を反映させて、解析モデルを再生成
         model.initMaterialCroSecLists();
         model.febmodel = model.buildFEModel();
+
         // 次のステップへ
+        i++;
       }
 
       // 最終モデルの確認用に最後の解析実行
