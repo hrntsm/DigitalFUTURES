@@ -6,6 +6,7 @@ Karamba3D はユーロコードを基にしているため、C# を使って Kar
 ## C# の基礎
 
 //TODO:下で Karamba3d カスタマイズするときに使っている機能を紹介する？ Method の out とか
+//TODO: jim さんより OOP の話が良いのではないかというコメントいただいた
 
 環境構築がうまくいかないと困るので、以下のブラウザ上で C# を実行できるサービス [.NET Fiddle](https://dotnetfiddle.net/) を使って基礎について振れていきます。
 
@@ -22,6 +23,46 @@ public class Program
   }
 }
 ```
+
+C# は静的型付け言語なので、変数には Python と異なり型を指定する必要があります。https://dotnetfiddle.net/5yW1jS
+
+```cs
+using System;
+
+public class Program
+{
+	public static void Main()
+	{
+		// 整数型 int
+		int ia = 2;
+		int ib = 5;
+		int ic = ia + ib;
+		Console.WriteLine("整数型 int");
+		Console.WriteLine(ic);
+
+		// 倍精度浮動小数点型 double
+		// 小数点以下の値を持つ数値を扱える。
+		// 単精度浮動小数点もあるが、こちらを使う場合が多い
+		double da = 20.2;
+		double db = 10.3;
+		double dc = da + db;
+		Console.WriteLine("倍精度浮動小数点型 double");
+		Console.WriteLine(dc);
+
+		// 文字列型 string
+		// 文字列は ""（ダブルコーテーション）で囲う
+		// 文字列の足し算もできる
+		string sa = "hello ";
+		string sb = "world";
+		string sc = sa + sb + "!!!";
+		Console.WriteLine("文字列型 String");
+		Console.WriteLine(sc);
+	}
+}
+```
+
+C# はオブジェクト指向の言語と言われています。オブジェクト指向は何でしょうか。
+あああ
 
 ## Grasshopper のカスタムコンポーネントの作成
 
