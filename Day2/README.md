@@ -325,12 +325,12 @@ public class Script_Instance : GH_ScriptInstance
       List<double> outG;
       List<double> outComp;
       string message;
-      //TODO: List の List は良くないのでは？
       List<List<double>> N;
       List<List<double>> Q;
       List<List<double>> M;
 
       // nIterの分だけ断面の収束計算を行う
+      int i = 0;
       while (i < nIter)
       {
         // 最初に解析を実行
@@ -341,27 +341,28 @@ public class Script_Instance : GH_ScriptInstance
         {
           var beam = model.elems[elemInd] as ModelBeam;
           if (beam == null)
+          {
             continue;
+          }
 
           // 要素の応力を取得
-          BeamResultantForces.solve(model, new List<string> { elemInd.ToString() }, lcInd, 100, 1, out N, out Q, out M);
+          BeamResultantForces.solve(model, new List<string> { elemInd.ToString() }, lcName, 100, 1, out N, out Q, out M);
 
           // 断面検定
-          // TODO: 応力これであってる？ここでは梁が対象だから横座屈の検定式とかの日本基準関連の何かを入れられるか？そもそも検定にせん断入ってない
-          foreach (var croSec in croSecs)
+          foreach (CroSec_Beam croSec in croSecs)
           {
             beam.crosec = croSec;
-            var maxSigma = Math.Abs(N[lcInd][0]) / croSec.A + M[lcInd][0] / croSec.Wely_z_pos;
-            if (maxSigma < croSec.material.fy())
+            var maxSigma = Math.Abs(N[0][0]) / croSec.A + M[0][0] / croSec.Wely_z_pos;
+            if (maxSigma < croSec.material.ft())
             {
-              break;  // 断面が許容応力以下になったら断面の変更を終了
+              break; // 断面が ft 以下になったら断面の変更を終了
             }
           }
         }
 
         // ここまでの処理で変更した断面を反映させて、解析モデルを再生成
         model.initMaterialCroSecLists();
-        model.febmodel = model.buildFEModel();
+        model.buildFEModel();
 
         // 次のステップへ
         i++;
@@ -371,7 +372,7 @@ public class Script_Instance : GH_ScriptInstance
       model = k3d.Algorithms.AnalyzeThI(model, out maxDisp, out outG, out outComp, out message);
 
       // 結果の出力
-      dispOut = new GH_Number(maxDisp[lcInd] * 100);
+      dispOut = new GH_Number(maxDisp[0]);
       modelOut = new Karamba.GHopper.Models.GH_Model(model);
     }
 }
