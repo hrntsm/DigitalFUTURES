@@ -22,27 +22,27 @@ Karamba3D はユーロコードを基にしているため、C# を使って Kar
 
 これらを通じて参加者には Grasshopper を使った構造コンピュテーショナルデザインの基礎の理解と実践能力の取得を期待します。
 
-## Required skills:
+## Required skills
 
 - 構造力学についての基礎的な知識があることが望ましい
 - ソフトの操作等については基礎的な内容から始めるため特に必要ではない
 - アドバンストな内容にも触れるため下記 Required software に加えて Python、C# に触れたことがあるとより理解が深まると思われる
 
-## Required software:
+## Required software
 
 - Rhinoceros
 - Grasshopper
 - Karamba3d（フリー版でも問題ないがプロ版推奨）
 
-## Required hardware:
+## Required hardware
 
 - Windows PC
 
-## Language:
+## Language
 
 - 日本語
 
-## Workshop daily schedule:
+## Workshop daily schedule
 
 | Day #         | Time(local)    | Content JA                                                                                                                                                                                                                |
 | ------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

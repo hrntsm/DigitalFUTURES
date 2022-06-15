@@ -91,8 +91,48 @@ public class Program
 }
 ```
 
-//TODO:method を作って上の処理を配列に対して for でやる。参考に While とか foreach のものはリンクだけ貼る
-上の例では単純に1回の処理でしたが、データの配列を作成して各値に対して判定してみます。
+上の例では単純に 1 回の処理でしたが、データの配列を作成して各値に対して判定してみます。https://dotnetfiddle.net/MRayoA
+
+判定する箇所を関数化し、for 文を使って配列の長さ分処理を行っています。
+
+```cs
+using System;
+
+public class Program
+{
+	public static void Main()
+	{
+		var values = new double[]{ 1.0, 10, 3.3, 10.2, 4 };
+
+		for(var i = 0; i < values.Length; i++)
+		{
+			CheckValue(values[i]);
+		}
+	}
+
+	public static void CheckValue(double num)
+	{
+		if (num > 10)
+		{
+			Console.WriteLine("入力: " + num + " は10より大きいです。");
+		}
+		else if (num >= 5)
+		{
+			Console.WriteLine("入力: " + num + " は5以上、10以下です。");
+		}
+		else
+		{
+			Console.WriteLine("入力: " + num + " は5未満です。");
+		}
+	}
+}
+```
+
+こういった処理は while 文や foreach 文でも書くことができます。
+興味がある方は以下のリンクより見てください。
+
+- while での書き方：https://dotnetfiddle.net/PdZqoW
+- foreach での書き方：https://dotnetfiddle.net/A3zEEs
 
 C# はオブジェクト指向の言語と言われています。
 オブジェクト指向(Object Oriented Programing, OOP)は何でしょうか。
@@ -114,8 +154,6 @@ C# はオブジェクト指向の言語と言われています。
 TBD
 
 ## Karamba3D のカスタマイズ
-
-//TODO これを作ったのが 1.3.3 のときなので今でも動くか確認する。
 
 カスタマイズで参照する Karamba3d の SDK は以下になります。
 
@@ -159,70 +197,79 @@ https://www.karamba3d.com/help/2-2-0/html/b2fe4d67-e7e2-4f96-bc84-ecd423bde1a7.h
 
 ```cs
 using System.Drawing;
+using System.Linq;
 using Karamba.Utilities;
+using Karamba.Elements;
 using Karamba.Geometry;
 using Karamba.CrossSections;
 using Karamba.Supports;
+using Karamba.Materials;
 using Karamba.Loads;
+using Karamba.Models;
 
 public class Script_Instance : GH_ScriptInstance
 {
     private void RunScript(ref object modelOut, ref object maxDisp)
     {
-        var logger = new MessageLogger();
-        var k3d = new KarambaCommon.Toolkit();
+      var logger = new MessageLogger();
+      var k3d = new KarambaCommon.Toolkit();
 
-        // karamba用のlineを作成
-        // 名前が似ていますが、Point3もLine3のKaramba.Geometryの構造体です。
-        var p0 = new Point3(0, 0, 0);
-        var p1 = new Point3(0, 0, 5);
-        var L0 = new Line3(p0, p1);
+      // karamba 用の line を作成
+      // 名前が似ていますが、Point3 も Line3 の Karamba.Geometry の構造体です。
+      var p0 = new Point3(0, 0, 0);
+      var p1 = new Point3(0, 0, 5000);
+      var L0 = new Line3(p0, p1);
 
-        // 材料の作成
-        var E = 210000000;  // kN/m2
-        var G = 80760000;  // kN/m2
-        var gamma = 78.5;  // kN/m3
-        var material = new FemMaterial_Isotrop("Steel", "SN400", E, G, G, gamma, 0, 0, Color.Brown);
+      // 材料の作成
+      string family = "Steel";
+      string name = "SN400";
+      double E = 210000000; // kN/m2
+      double G = 80760000;  // kN/m2
+      double gamma = 78.5;  // kN/m3
+      double ft = 23.5;     // kN/m2
+      var hypothesis = FemMaterial.FlowHypothesis.mises; // 降伏判定理論
+      double alfa = 0; //熱膨張係数（使わないので 0）
+      var material = new FemMaterial_Isotrop(family, name, E, G, G, gamma, ft, ft, hypothesis, alfa, Color.Brown);
 
-        // 断面の作成
-        double height = 30;  // cm
-        double width = 30;
-        double thickness = 2.2;
-        double fillet = 2.5 * thickness;
-        var croSec = new CroSec_Box("Box", "Box", null, null, material, height, width, width, thickness, thickness, thickness, fillet);
+      // 断面の作成
+      double height = 300;  // mm
+      double width = 300;
+      double thickness = 22;
+      double fillet = 2.5 * thickness;
+      var croSec = new CroSec_Box("Box", "Box", null, null, material, height, width, width, thickness, thickness, thickness, fillet);
 
-        // Beamを作成
-        // 入力は、Line、Id、CrossSection
-        var nodes = new List<Point3>();
-        var elems = k3d.Part.LineToBeam(new List<Line3>(){ L0 }, new List<string>(){ "Column" }, new List<CroSec>(croSec), logger, out nodes);
+      // Beamを作成
+      // 入力は、Line、Id、CrossSection
+      var nodes = new List<Point3>();
+      List<BuilderBeam> elems = k3d.Part.LineToBeam(L0, "column", croSec, logger, out nodes);
 
-        // 境界条件の作成
-        // 入力は、条件を指定するPoint3と各変位の拘束のBoolean
-        var support = k3d.Support.Support(p0, new List<bool>(){ true, true, true, true, true, true });
-        var supports = new List<Support>(){ support };
+      // 境界条件の作成
+      // 入力は、条件を指定する Point3 と各変位の拘束の Boolean
+      Support support = k3d.Support.Support(p0, new List<bool>(){ true, true, true, true, true, true });
+      var supports = new List<Support>(){ support };
 
-        // 荷重の作成
-        // 入力は、条件を指定するPoint3、荷重のベクトル、モーメントのベクトル、荷重ケース
-        var pload = k3d.Load.PointLoad(p1, new Vector3(0, 0, -10), new Vector3(), 0);
-        var ploads = new List<Load>(){ pload };
+      // 荷重の作成
+      // 入力は、条件を指定するPoint3、荷重のベクトル
+      PointLoad pload = k3d.Load.PointLoad(p1, new Vector3(0, 0, -10));
+      var ploads = new List<Load>(){ pload };
 
-        double mass;  // 重量
-        Point3 cog;  // 重心
-        bool flag;
-        string info;
-        var model = k3d.Model.AssembleModel(elems, supports, ploads, out info, out mass, out cog, out info, out flag);
+      double mass;  // 重量
+      Point3 cog;  // 重心
+      bool flag;
+      string info;
+      Model model = k3d.Model.AssembleModel(elems, supports, ploads, out info, out mass, out cog, out info, out flag);
 
-        // 解析を実行
-        List<double> maxDisps;  // m
-        List<double> outG;
-        List<double> outComp;
-        string message;
-        model = k3d.Algorithms.AnalyzeThI(model, out maxDisps, out outG, out outComp, out message);
+      // 解析を実行
+      List<double> maxDisps; // m
+      List<double> outG;
+      List<double> outComp;
+      string message;
+      model = k3d.Algorithms.AnalyzeThI(model, out maxDisps, out outG, out outComp, out message);
 
-        Print("max disp: " + maxDisps.Max() * 100);
+      Print("max disp: " + maxDisps.Max() * 100);
 
-        modelOut = new Karamba.GHopper.Models.GH_Model(model);
-        maxDisp = maxDisps.Max() * 100;
+      modelOut = new Karamba.GHopper.Models.GH_Model(model);
+      maxDisp = maxDisps.Max() * 100;
     }
 }
 ```
