@@ -5,10 +5,9 @@ Karamba3D はユーロコードを基にしているため、C# を使って Kar
 
 ## C# の基礎
 
-//TODO:下で Karamba3d カスタマイズするときに使っている機能を紹介する？ Method の out とか
-//TODO: jim さんより OOP の話が良いのではないかというコメントいただいた
-
 環境構築がうまくいかないと困るので、以下のブラウザ上で C# を実行できるサービス [.NET Fiddle](https://dotnetfiddle.net/) を使って基礎について振れていきます。
+
+### Hello World をする
 
 まずプログラム言語を始める際のおなじみの Hello World の仕方は以下になります。https://dotnetfiddle.net/Ppx2zf
 
@@ -23,6 +22,8 @@ public class Program
   }
 }
 ```
+
+### 型について
 
 C# は静的型付け言語なので、変数には Python と異なり型を指定する必要があります。https://dotnetfiddle.net/5yW1jS
 
@@ -60,6 +61,8 @@ public class Program
 	}
 }
 ```
+
+### if, for, while, foreach
 
 if や for など他の言語でもよく使われる構文も備えています。https://dotnetfiddle.net/aN45Me
 
@@ -134,6 +137,8 @@ public class Program
 - while での書き方：https://dotnetfiddle.net/PdZqoW
 - foreach での書き方：https://dotnetfiddle.net/A3zEEs
 
+### OOP について
+
 C# はオブジェクト指向の言語と言われています。
 オブジェクト指向(Object Oriented Programing, OOP)は何でしょうか。
 ググるとオブジェクト指向の三大要素として以下が出てきます。
@@ -143,15 +148,8 @@ C# はオブジェクト指向の言語と言われています。
 3. 多態性（ポリモーフィズム）
 
 興味がある方は調べてみてください。
-今日は Grasshopper コンポーネントの作成に関わりそうな部分のみ紹介します。
 
-```cs
-
-```
-
-## Grasshopper のカスタムコンポーネントの作成
-
-TBD
+//TODO: 時間があったら追加する。
 
 ## Karamba3D のカスタマイズ
 
@@ -377,3 +375,35 @@ public class Script_Instance : GH_ScriptInstance
     }
 }
 ```
+
+## Hops を使った連携
+
+Hops を使うと既存のコードと Grasshopper を連携させることができます。
+なおここでは既存のコードとして Python を利用します。
+
+㈱ストラクチャーさんが Python の鉄骨梁の断面算定プログラムを公開しているのでこれを Hops で使って Karamba3d で得た応力を使って断面算定をする。
+
+### 断面の許容応力度を計算
+
+ここでは Google が提供しているクラウドでの Python 実行環境の Google Colab を使います。
+内容については ipynb フォルダに入っている calc_fb_hops.ipynb を参照してください。
+
+詳細は省きますが、ストラクチャーさんが公開しているコードでは以下のように断面を入れると許容応力度を返してくれます。
+
+これは先ほどの断面最適化の部分で書いたような単純な断面積からくるものだけでなく、以下の項目も考慮した日本建築学会の規基準によるものになっています。
+
+- 横座屈
+- 曲げ勾配による補正係数
+
+```python
+obj = Steel('H-300*150*6.5*9')
+(fb, ma) = obj.calc_fb(lb = 3, m2_m1 = 2)
+print('fb = ' + str(fb) + ', Ma = ' + str(ma))
+# fb = 109.73, Ma = 52.78
+```
+
+上記の値を Hops を使って Grasshopper で使えるようにしたのが以下になります。
+
+![fb_ma](./image/fbma.gif)
+
+### Karamba3d との連携

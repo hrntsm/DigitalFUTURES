@@ -33,6 +33,7 @@ Karamba3D はユーロコードを基にしているため、C# を使って Kar
 - Rhinoceros
 - Grasshopper
 - Karamba3d（フリー版でも問題ないがプロ版推奨）
+- Google colab
 
 ## Required hardware
 
