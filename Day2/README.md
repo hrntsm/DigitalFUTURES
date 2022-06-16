@@ -171,7 +171,7 @@ https://www.karamba3d.com/help/2-2-0/html/b2fe4d67-e7e2-4f96-bc84-ecd423bde1a7.h
 - 部材長：3m
 - 部材の ID：Column
 
-こんな形です。完成したデータは Data フォルダの column_model.gh です。
+こんな形です。完成したデータは grasshopper フォルダの column_model.gh です。
 
 ![GH_model](./image/gh_model.jpg)
 
@@ -191,7 +191,7 @@ https://www.karamba3d.com/help/2-2-0/html/b2fe4d67-e7e2-4f96-bc84-ecd423bde1a7.h
 
 #### C#Script の内容
 
-完成したデータは Data フォルダの column_script.gh です。注意点ですが、以下のコード中でコメントアウトしているように単位がものによってまちまちなので注意してください。
+完成したデータは grasshopper フォルダの column_script.gh です。注意点ですが、以下のコード中でコメントアウトしているように単位がものによってまちまちなので注意してください。
 
 ```cs
 using System.Drawing;
@@ -277,6 +277,8 @@ public class Script_Instance : GH_ScriptInstance
 #### 片持ち梁の変更
 
 片持ち梁を作成し、その応力が許容応力以内におさまる最小の断面にするものを作成します。断面は作成した断面リストの中から選択します。
+
+参考のデータは cross_section_opt.gh です。
 
 ![canti_opt](./image/canti_opt.jpg)
 
@@ -407,3 +409,84 @@ print('fb = ' + str(fb) + ', Ma = ' + str(ma))
 ![fb_ma](./image/fbma.gif)
 
 ### Karamba3d との連携
+
+以上より一定のフォーマットに沿った形でテキストを渡すと許容応力が計算できることがわかりました。
+
+これと Karamba3d で応力と断面形状を出力できれば学会規基準で断面検定することができるようになります。
+
+![calc_ma](./image/calc_ma.jpg)
+
+C# スクリプトでのコードは以下になります。
+ベースは上記の断面最適化で使ったものになります。
+
+```cs
+using System.Linq;
+using Karamba.Models;
+using Karamba.CrossSections;
+using Karamba.Elements;
+using Karamba.Results;
+
+private void RunScript(object modelIn, List<string> beamId, ref object modelOut, ref object sectionName, ref object length, ref object moment)
+{
+  // modelIn は object 型として入力されているので、
+  // ここで Karamba の型にキャスト
+  var model = modelIn as Model;
+
+  var k3d = new KarambaCommon.Toolkit();
+  List<double> maxDisp;
+  List<double> outG;
+  List<double> outComp;
+  string message;
+  List<List<double>> N;
+  List<List<double>> Q;
+  List<List<double>> M;
+
+  // 結果の出力用のリストの作成
+  List<string> name = new List<string>();
+  List<double> beamLength = new List<double>();
+  List<double> stress = new List<double>();
+
+  // 最初に静解析を実行
+  model = k3d.Algorithms.AnalyzeThI(model, out maxDisp, out outG, out outComp, out message);
+
+  // 要素ごとに応力を取得
+  for (int elemInd = 0; elemInd < model.elems.Count; elemInd++)
+  {
+    var beam = model.elems[elemInd] as ModelBeam;
+    if (beam == null)
+    {
+      continue;
+    }
+
+    // 要素の応力を評価して出力にセット
+    BeamResultantForces.solve(model, new List<string> { elemInd.ToString() }, "-1", 10000, 1, out N, out Q, out M);
+    stress.Add(M[0][0] / 1000000); //単位換算 Nmm → kNm
+
+    // 断面を取得
+    var crosec = beam.crosec as CroSec_I;
+    // 今回は簡単にするために H型のみを対象としているためエラーの処理を追加
+    if (crosec == null)
+    {
+      Component.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "断面が H ではありません");
+      return;
+    }
+    // 取得した断面名を出力用にセット
+    name.Add("H-" + crosec.getHeight() + "*" + crosec.maxWidth() + "*" + crosec.w_thick + "*" + crosec.uf_thick);
+
+    // 部材長の取得
+    // 計算の値は m なので単位換算している
+    beamLength.Add(beam.elementLength(model) / 1000);
+  }
+
+  // 結果の出力
+  modelOut = new Karamba.GHopper.Models.GH_Model(model);
+  sectionName = name;
+  length = beamLength;
+  moment = stress;
+}
+```
+
+## 質疑応答コーナー
+
+本日の内容は以上です。
+質疑などありますか？
