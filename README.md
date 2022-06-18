@@ -26,18 +26,24 @@ Karamba3D はユーロコードを基にしているため、C# を使って Kar
 
 - 構造力学についての基礎的な知識があることが望ましい
 - ソフトの操作等については基礎的な内容から始めるため特に必要ではない
-- アドバンストな内容にも触れるため下記 Required software に加えて Python、C# に触れたことがあるとより理解が深まると思われる
+- アドバンストな内容にも触れるため下記 Required software に加えて C# に触れたことがあるとより理解が深まると思われる
 
 ## Required software
 
 - Rhinoceros
 - Grasshopper
-- Karamba3d（フリー版でも問題ないがプロ版推奨）
-- Google colab
+  - [Karamba3d](https://www.food4rhino.com/en/app/karamba3d)（フリー版でも問題ないがプロ版推奨、トライアル版は使わないでください。）
+  - [Wallacei](https://www.food4rhino.com/en/app/wallacei)
+  - [Tunny](https://www.food4rhino.com/en/app/tunny)
+  - [Hops](https://developer.rhino3d.com/guides/compute/hops-component/#installing-hops-for-windows)
+- Google Colab (Google アカウントがあれば良いです)
+- [Visual Studio Code](https://code.visualstudio.com/download)
+- [Python](https://www.python.org/downloads/)
 
 ## Required hardware
 
 - Windows PC
+  - Karamba3D は Mac版はありません
 
 ## Language
 
