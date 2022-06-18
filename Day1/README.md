@@ -14,9 +14,115 @@
     - Rhino、GH、Karamba3d の経験、レベル
     - プログラミングの経験、C#、Python の経験
 
-## Rhino、Grasshopper について
+## Rhino について
+
+[公式サイト](https://www.rhino3d.co.jp/)より
+
+> Rhino があればカタチを作り、編集し、解析、図面やレンダリング画像、アニメーションの作成、そして形状や次数、大きさの制約なしに NURBS カーブ、サーフェス、ソリッドを変換することができます。
+> Rhino が生み出す自由形状の 3 次元モデリングは、あなたのイメージを正確にカタチにします。使われる分野も自由様々。工業デザインはもちろん、機械設計、金型設計、試作、製造、建築、宝飾、マルチメディア、FEM・CFD 等解析など、Rhino は使う人や分野を制約することはありません。
+
+NURBS を扱うソフトであることが特徴です。
+以下の記事がわかりやすいです。
+
+- [NURBS とは？](https://www.rhino3d.com/jp/features/nurbs/)
+- [ビギナーのための曲面モデリングセミナー Top](https://www.applicraft.com/tips/rhinoceros/series_beginner/)
+
+Rhinoceros は UI で各機能をつかうことができますが、例えば AutoCAD のようにコマンドを使って機能を使うこともできます。
+コマンドは英語で構成されていることが多いので、私は英語版の Rhino を使っていますので注意してください。
+
+Rhino では以下の形状を表すワードが出てきます。関係性を理解していると Grasshopper などで扱うときに理解が深まります。
+
+- Curve
+  - 線です。曲線や直線、円弧も含まれます。
+- Surface
+  - 面です。メッシュとの違いは、数式で表現されるものだということです。
+- Mesh
+  - こちらも面ですが、Surface との違いは、点（Vertex）と線（Edge）と面（Face）で構成されます。
+  - Rhinoceros では 3 点のメッシュと 4 点のメッシュの 2 つを扱うことができます。
+  - 有限要素法に慣れている方は、シェル要素のような点から作られる面だと思っていただいても良いです。
+- SubD(SubDivision)
+  - メッシュをベースとして滑らかな面を構成するものです。
+  - Rhinoceros では SubDDisplayToggle を使うとベースとなるメッシュと滑らかな面の表示を切り替えることが。
+- Brep(BoundaryRepresentation)
+  - Brep はその単語の通り、境界を表現するものです。
+  - 複数のサーフェスが集まったものだと考えてください。
+- BooleanOperations
+  - ブーリアン演算は、複数の形状を和、差、積といった集合演算により組み合わせ、合成された形状を作る演算です。
+  - [wikipedia](https://ja.wikipedia.org/wiki/%E3%83%96%E3%83%BC%E3%83%AA%E3%82%A2%E3%83%B3%E6%BC%94%E7%AE%97)
+
+## Grasshopper について
+
+日本の代理店である [Applicraft 社のページ](https://www.applicraft.com/products/rhinoceros/grasshopper/)より引用
+
+> 特徴１：マンパワーでは不可能な大量のデータ処理が可能  
+> 特徴２：自由曲面を含む 3 次元形状をアルゴリズムにより生成
+>
+> Grasshopper は Rhinoceros 上で動作するプラグインのモデリング支援ツールです。
+> 膨大な量のシミュレーションが行え、従来の発想方法では不可能だったアイデア領域の拡大、効率化、意思決定を桁違いのレベルで行うことを実現します。
+> プロダクトデザイン、建築、ジュエリーデザインなど様々な分野で使用されています。
+
+ノードベースのプログラミング言語とも言われたりします。
 
 ## Karamba3d について
+
+Grasshopper 上で動く構造解析のプラグインです。
+内部的には C++で書かれたソルバーが動作しています。
+
+もし有料版の Karamba3d を購入されている場合、Grasshopper を起動する前に Rhinoceros のコマンドで `Karamba3DGetLicense` を実行することで Zoo からライセンスを取得することができます。
+
+手間な時は `Options` コマンドを使って Rhinoceros のオプションで General から Command Lists の部分にコマンドを入れると Rhino を起動したときに自動で入力したコマンドが実行されます。
+
+<img src="./image/option_setting.jpg">
+
+### Karamba3d での単純な架構の解析
+
+はじめに大学の静力学の授業でやるであろう片端ピン、片端ローラーの単純梁の解析をしてみます。
+
+参考のデータは simple-beam.gh です。
+
+反力と最大モーメントの理論値は以下
+
+$$ R_A = \frac{Pb}{L}, R_B = \frac{Pa}{L}, M_c = \frac{Pab}{L} $$
+
+梁の中央に荷重がかかる場合は以下
+
+$$ R = \frac{P}{2}, M = \frac{PL}{4}$$
+
+例えば梁長 1000mm、荷重 10N で中央に荷重をかけたとすると結果は以下
+
+$$ R = 5, M = 2500 $$
+
+Karamba3d の解析結果は以下となり、あっていることがわかります。
+
+<img src="./image/simple-beam.jpg">
+
+解析自体は他のソフトでも当然できるけれど Grasshopper の特徴として、スライダーを使って荷重位置を動かすこともできます。
+
+<img src="./image/simple-beam.gif">
+
+### 骨組みの解析
+
+ビルのような建物も解析することができます。
+参考データは Grasshopper フォルダの building.gh です。
+
+<img src="./image/building_DL_LL.jpg" width="30%">
+<img src="./image/building_EX.jpg" width="30%">
+<img src="./image/building_EY.jpg" width="30%">
+
+### サーフェスの解析
+
+シェルの構造解析のような、よくある構造最適化もできます3日目の最適化の項目で振れるので、ここでは設備ダクトなどを通すために梁に開けられる梁貫通孔についてふれます。
+
+一般的な梁貫通基準は以下
+
+- 貫通孔の内径寸法は梁せいの 1/2 以下
+- 貫通孔間隔は両側の貫通孔径の平均の 2~3 倍以上
+- 貫通孔位置は外法から 100mm 以上
+
+現場でたくさん梁貫通出会うと思いますが、基準図以上のこと考えたことありますか。
+パラメトリックに梁貫通して応力がどうなるかみましょう。
+
+<img src="./image/harikantsu.jpg" width="100%">
 
 ## 参考例の作成
 
