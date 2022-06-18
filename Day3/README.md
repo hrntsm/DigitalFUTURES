@@ -5,7 +5,7 @@
 
 ## Grasshopper に既にあるコンポーネントでの最適化
 
-//TODO: 堀川さんのハンズオンを見てるとそもそも Wallacei とか最適化そのものについて紹介してもよいという印象を受けた。
+Grasshopper でできる最適化が実装されているコンポーネントの多くは、遺伝的アルゴリズム（GA: GeneticAlgorithms）を使っています。
 
 ### Galapagos の紹介
 
@@ -22,9 +22,8 @@ MO でできることが特徴
 Tunny は自分が Wallacei をつかっていて不便な個所を修正した。
 
 - ジオメトリが保存されない
-- GAが収束しない解析問題に対応したい
+- GA が収束しない解析問題に対応したい
   - ベイズ最適化に対応した点が大きい
-
 
 ## RhinoCompute と Python の連携
 
@@ -36,7 +35,7 @@ RhinoInside や Rhino3dm、RhinoCompute など コードから Rhino のデー�
 その中で、RhinoCompute は Grasshopper から使用するコンポーネントである Hops が公式から提供されており、コードを使うことなく使用することができる機能になっています。
 
 Hops v0.8 のアップデートで Hops で読み込んだ Grasshopper をデータを動かす Python コードを自動生成して出力する機能が追加されました。
-これを使うことで Python にあまり慣れていない人でも Grasshopper を コードにように扱うことで、Python で簡単に Rhino のデータを扱うことができるようになりました。
+これを使うことで Python にあまり慣れていない人でも Grasshopper を コードにように扱い、Python で簡単に Rhino のデータを扱うことができるようになりました。
 
 ここではそのやり方について紹介します。
 
@@ -119,7 +118,8 @@ for value in values:
 
 - https://www.python.org/downloads/
 
-なお私の環境では Python 3.9 を使用しています。
+なお私の環境では Python 3.9 を使用していますが最新版の 3.10 でも問題なく動くと思われます。
+考のコードは python のフォルダにある Add.py、または Notebook の場合は ipynb フォルダに入っています。
 
 #### 環境の構築
 
@@ -311,20 +311,69 @@ GitHub の OSS として開発されており、現在も積極的に開発さ�
 RhinoCompute で Grasshopper を実行する箇所でやったように、pip を使って optuna をインストールします。
 
 ```python
-pip install optuna
+pip install optuna, plotly
 ```
 
-//TODO: 続きをかく
+#### optuna での最適化
+
+ここでは GA を使った最適化を行ってみます。optuna の GA は NSGA-II というアルゴリズムで実装されており、以下のような引数を取れます。
+
+- https://optuna.readthedocs.io/en/stable/reference/generated/optuna.samplers.NSGAIISampler.html
+
+Galapagos や他のものと同様に、各世代のサイズ(Population_size) や 突然変異の確率(mutation_prob)、交差の確立(crossover_prob)が取れることがわかります。
+
+簡単な例は以下になります。
+この短いコードで GA を実行できます。
+
+```python
+import optuna
+
+
+def objective(trial):
+    x = trial.suggest_float('x', -10, 10)
+    return (x - 2) ** 2
+
+sampler = optuna.samplers.NSGAIISampler()　# 最適化アルゴリズムの設定
+study = optuna.create_study(sampler=sampler)　# 最適化の計算を行うための study を作成
+study.optimize(objective, n_trials=100) # 最適化の実行
+
+print("Best param: ", study.best_params)
+print("Best value: ", study.best_value)
+
+# Best param:  {'x': 1.999848379506605}
+# Best value:  2.2988774017312754e-08
+```
+
+GA の詳細の設定をしたい場合は、`sampler = ...` の部分を以下のように設定します。
+
+```python
+sampler = optuna.samplers.NSGAIISampler(
+    population_size=10,
+    mutation_prob=0.1,
+    crossover_prob=0.8,
+    swapping_prob=0.4,
+)
+```
+
+結果を可視化する際は、上記コードの最後に以下を追加してください。
+
+```python
+vis = optuna.visualization.plot_optimization_history(study)
+vis.show()
+```
+
+何がグラフ化可能かは、以下のドキュメントを確認してください。
+
+- https://optuna.readthedocs.io/en/stable/reference/visualization/index.html
+
+最適化コンポーネントの Tunny はこの Optuna をラップしているので、他にも Tunny ででできることは全て Optuna でも行うことができます。
+なお、Tunny は Optuna の全ての機能をラップしているわけではないので、こうやってコードを使ってやる方がより詳細に設定ができます。
 
 #### 連携用の Karamba3d モデルの作成
 
 上で最適化を実行した Karamba3d のモデルを変更して、Python から実行できるようにします。
 
 //TODO: 続き
-
-#### Jupyter Notebook 化
-
-//TODO: これでやりたいよね。コードの社内資料化という意味でも。Colab でやりたいけど、ローカル通信は大変そう
 
 #### Python から最適化の実行
 
