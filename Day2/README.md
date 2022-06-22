@@ -5,17 +5,25 @@ Karamba3D はユーロコードを基にしているため、C# を使って Kar
 
 ## C# の基礎
 
-環境構築がうまくいかないと困るので、以下のブラウザ上で C# を実行できるサービス [.NET Fiddle](https://dotnetfiddle.net/) を使って基礎について振れていきます。
+環境構築がうまくいかないず手間取ることもあるので、以下のブラウザ上で C# を実行できるサービス [.NET Fiddle](https://dotnetfiddle.net/) を使って基礎について振れていきます。
 
 ### Hello World をする
 
 まずプログラム言語を始める際のおなじみの Hello World の仕方は以下になります。https://dotnetfiddle.net/Ppx2zf
 
+例えば Python や他の言語のように単純に文字列を出力する文だけでは C# は動きません。
+そういった言語に慣れている方は少し冗長に感じるかもしれませんが、以下のようにクラスやメソッドを定義することで動作します。
+
 ```cs
+// 最初に使用するライブラリを宣言します。
 using System;
 
+// class というキーワードを使ってクラスを定義します。
+// class C# ではとても重要な概念です。
 public class Program
 {
+  // class の中に、何かの動作を定義します。
+  // これを メソッド と言います。
   public static void Main()
   {
     Console.WriteLine("Hello World!");
@@ -27,38 +35,51 @@ public class Program
 
 C# は静的型付け言語なので、変数には Python と異なり型を指定する必要があります。https://dotnetfiddle.net/5yW1jS
 
+なぜ型を指定する必要があるかというと、開発における安全性を高めるためです。
+プログラミングといっても文字を書いているだけです。
+どの文字にどのような型が割り当てられるかは、型を付けなければすぐにはわかりません。
+例えば数値型に文字列を入れてしまうとエラーで止まってしまいます。
+そういったことをなくし安全に開発するために型を付けることが重要です。
+
 ```cs
 using System;
 
 public class Program
 {
-	public static void Main()
-	{
-		// 整数型 int
-		int ia = 2;
-		int ib = 5;
-		int ic = ia + ib;
-		Console.WriteLine("整数型 int");
-		Console.WriteLine(ic);
+  public static void Main()
+  {
+    // 整数型 int
+    int ia = 2;
+    int ib = 5;
+    int ic = ia + ib;
+    Console.WriteLine("整数型 int");
+    Console.WriteLine(ic);
 
-		// 倍精度浮動小数点型 double
-		// 小数点以下の値を持つ数値を扱える。
-		// 単精度浮動小数点もあるが、こちらを使う場合が多い
-		double da = 20.2;
-		double db = 10.3;
-		double dc = da + db;
-		Console.WriteLine("倍精度浮動小数点型 double");
-		Console.WriteLine(dc);
+    // 倍精度浮動小数点型 double
+    // 小数点以下の値を持つ数値を扱える。
+    // 単精度浮動小数点もあるが、こちらを使う場合が多い
+    double da = 20.2;
+    double db = 10.3;
+    double dc = da + db;
+    Console.WriteLine("倍精度浮動小数点型 double");
+    Console.WriteLine(dc);
 
-		// 文字列型 string
-		// 文字列は ""（ダブルコーテーション）で囲う
-		// 文字列の足し算もできる
-		string sa = "hello ";
-		string sb = "world";
-		string sc = sa + sb + "!!!";
-		Console.WriteLine("文字列型 String");
-		Console.WriteLine(sc);
-	}
+    // 文字列型 string
+    // 文字列は ""（ダブルコーテーション）で囲う
+    // 文字列の足し算もできる
+    string sa = "hello ";
+    string sb = "world";
+    string sc = sa + sb + "!!!";
+    Console.WriteLine("文字列型 String");
+    Console.WriteLine(sc);
+
+    // var 型推論
+    // 型を推論するために使用される
+    // 以下のように型を書かなくてもコンパイラが自動的に推論してくれます。
+    var intNum = 10;
+    var doubleNum = 10.2;
+    var str = "hello";
+  }
 }
 ```
 
@@ -74,60 +95,63 @@ using System;
 
 public class Program
 {
-	public static void Main()
-	{
-		int a = 10;
+  public static void Main()
+  {
+    int a = 10;
 
-		if (a > 10)
-		{
-			Console.WriteLine("入力は10より大きいです。");
-		}
-		else if (a >= 5)
-		{
-			Console.WriteLine("入力は5以上、10以下です。");
-		}
-		else
-		{
-			Console.WriteLine("入力は5未満です。");
-		}
-	}
+    if (a > 10)
+    {
+      Console.WriteLine("入力は10より大きいです。");
+    }
+    else if (a >= 5)
+    {
+      Console.WriteLine("入力は5以上、10以下です。");
+    }
+    else
+    {
+      Console.WriteLine("入力は5未満です。");
+    }
+  }
 }
 ```
 
 上の例では単純に 1 回の処理でしたが、データの配列を作成して各値に対して判定してみます。https://dotnetfiddle.net/MRayoA
 
-判定する箇所を関数化し、for 文を使って配列の長さ分処理を行っています。
+判定する箇所をメソッド化し、for 文を使って配列の長さ分の処理を行っています。
+配列は値の集まりです。
 
 ```cs
 using System;
 
 public class Program
 {
-	public static void Main()
-	{
-		var values = new double[]{ 1.0, 10, 3.3, 10.2, 4 };
+  public static void Main()
+  {
+    var values = new double[]{ 1.0, 10, 3.3, 10.2, 4 };
 
-		for(var i = 0; i < values.Length; i++)
-		{
-			CheckValue(values[i]);
-		}
-	}
+    for(var i = 0; i < values.Length; i++)
+    {
+      // このようにメソッド化することで、ひとまとまりの処理が一体何をしているのかわかりやすくなります。
+      // Check Value → 値をチェックしているんだということがわかりやすい
+      CheckValue(values[i]);
+    }
+  }
 
-	public static void CheckValue(double num)
-	{
-		if (num > 10)
-		{
-			Console.WriteLine("入力: " + num + " は10より大きいです。");
-		}
-		else if (num >= 5)
-		{
-			Console.WriteLine("入力: " + num + " は5以上、10以下です。");
-		}
-		else
-		{
-			Console.WriteLine("入力: " + num + " は5未満です。");
-		}
-	}
+  public static void CheckValue(double num)
+  {
+    if (num > 10)
+    {
+      Console.WriteLine("入力: " + num + " は10より大きいです。");
+    }
+    else if (num >= 5)
+    {
+      Console.WriteLine("入力: " + num + " は5以上、10以下です。");
+    }
+    else
+    {
+      Console.WriteLine("入力: " + num + " は5未満です。");
+    }
+  }
 }
 ```
 
@@ -148,20 +172,28 @@ C# はオブジェクト指向の言語と言われています。
 3. 多態性（ポリモーフィズム）
 
 興味がある方は調べてみてください。
+大きなコードを書くときにこれを意識するとより安全で良いコードがかけるようになります。
 
-//TODO: 時間があったら追加する。
+これは OOP に対する説明として必ずしも正しくありませんが、上記でやったように機能を適切に分割してメソッドやクラスの塊にして実装していくことだと現段階では考えてください。
+
+## Grasshopper コンポーネントのカスタムコンポーネント
+
+ここまでの C# は、ウェブのサービス上で実行してきましたが、Grasshopper でも C# を使ってコンポーネントを作成することができます。
+
+//TODO: つくる
 
 ## Karamba3D のカスタマイズ
 
+上記でやったカスタムコンポーネントをさらに発展させることで、Karamba3d をカスタムすることができます。
 カスタマイズで参照する Karamba3d の SDK は以下になります。
 
-https://www.karamba3d.com/help/2-2-0/html/b2fe4d67-e7e2-4f96-bc84-ecd423bde1a7.htm
+- https://www.karamba3d.com/help/2-2-0/html/b2fe4d67-e7e2-4f96-bc84-ecd423bde1a7.htm
 
 ### 柱の解析
 
 #### Grasshopper でコンポーネントを使ってモデルづくり
 
-最初から Karamba を使ったコーディングをするとわかりづらいので、はじめにコンポーネントを使ってモデリングしていきます。
+最初から Karamba3d を使ったコーディングをするとわかりづらいので、はじめにコンポーネントを使ってモデリングしていきます。
 作るものの条件は以下です。
 
 - 断面形状：角型 30cm x 30cm 板厚 2.2cm
@@ -177,7 +209,10 @@ https://www.karamba3d.com/help/2-2-0/html/b2fe4d67-e7e2-4f96-bc84-ecd423bde1a7.h
 
 #### 同じものを C#Script コンポーネントで作る
 
-スクリプトで Karamba を使うためには、KarambaCommon.dll と Karamba.gha を使います。これは Karamba がインストールされたフォルダ内にあります。Karamba はデフォルトだと以下にあります。以下のフォルダには KarambaCommon.dll とは別に Karamba.dll がありますが、こちらは C++で書かれた Karamba3D の構造計算を実際に行っている部分になります。
+スクリプトで Karamba3d を使うためには、KarambaCommon.dll と Karamba.gha を使います。
+これは Karamba3d がインストールされたフォルダ内にあります。
+Karamba3d はデフォルトだと以下にあります。
+以下のフォルダには KarambaCommon.dll とは別に Karamba.dll がありますが、こちらは C++ で書かれた Karamba3d の構造計算を実際に行っている部分になります。
 
 > C:\Program Files\Rhino7\Plug-ins\Karamba\karambaCommon.dll
 
@@ -191,7 +226,9 @@ https://www.karamba3d.com/help/2-2-0/html/b2fe4d67-e7e2-4f96-bc84-ecd423bde1a7.h
 
 #### C#Script の内容
 
-完成したデータは grasshopper フォルダの column_script.gh です。注意点ですが、以下のコード中でコメントアウトしているように単位がものによってまちまちなので注意してください。
+完成したデータは grasshopper フォルダの column_script.gh です。
+
+注意点ですが、以下のコード中でコメントアウトしているように単位がものによってまちまちなため注意してください。
 
 ```cs
 using System.Drawing;
@@ -212,7 +249,7 @@ public class Script_Instance : GH_ScriptInstance
       var logger = new MessageLogger();
       var k3d = new KarambaCommon.Toolkit();
 
-      // karamba 用の line を作成
+      // karamba3d 用の line を作成
       // 名前が似ていますが、Point3 も Line3 の Karamba.Geometry の構造体です。
       var p0 = new Point3(0, 0, 0);
       var p1 = new Point3(0, 0, 5000);
@@ -284,12 +321,12 @@ public class Script_Instance : GH_ScriptInstance
 
 #### 断面リストの作成
 
-断面は Karamba の CrossSectionRangeSelector コンポーネントを使用します。
+断面は Karamba3d の CrossSectionRangeSelector コンポーネントを使用します。
 このコンポーネントが出力する断面のリストから先程の条件を満たす断面サイズを決定するようにプログラムを作成します。
-Karamba のデフォルトの断面リストには日本の規格も含んでおり、JIS 規格がベースになっています。
+Karamba3d のデフォルトの断面リストには日本の規格も含んでおり、JIS 規格がベースになっています。
 例えばメーカー品の断面を使用する場合は自分で追加できます。
 参考として SH と BCP, BCR を追加したものが Data/JP_CrossSectionValues.csv のデータになります。
-断面諸元については注意していますが、正確性は補償しないので実務での使用には気を付けてください。
+断面諸元については注意していますが、正確性は補償しませんので注意してください。。
 Read CrossSection Table From File コンポーネントでこれを読み込むことができます。
 
 断面リストのフォーマットは以下のようになっています。
@@ -301,7 +338,7 @@ Read CrossSection Table From File コンポーネントでこれを読み込む�
 
 #### C#Script の内容
 
-断面リストの取得に失敗すると Karamba のデフォルトの断面である RO114.3/4 になるので、出力がおかしいと思った場合は確認してください。
+断面リストの取得に失敗すると Karamba3d のデフォルトの断面である RO114.3/4 になるので、出力がおかしいと思った場合は確認してください。
 
 ```cs
 using System.Linq;
@@ -383,16 +420,20 @@ public class Script_Instance : GH_ScriptInstance
 Hops を使うと既存のコードと Grasshopper を連携させることができます。
 なおここでは既存のコードとして Python を利用します。
 
-㈱ストラクチャーさんが Python の鉄骨梁の断面算定プログラムを公開しているのでこれを Hops で使って Karamba3d で得た応力を使って断面算定をする。
+㈱ストラクチャーさんが Python の鉄骨梁の断面算定プログラムを公開しているのでこれを Hops で使って Karamba3d で得た応力を使って断面算定をする例を紹介します。
+
+- https://www.structure.jp/src_code.html
 
 ### 断面の許容応力度を計算
 
-ここでは Google が提供しているクラウドでの Python 実行環境の Google Colab を使います。
+Python の実行環境としては Google が提供しているクラウドでの Python 実行環境の Google Colab を使います。
+Python の環境構築ができている方は自身の環境で行っていただいても問題ありません。
+
 内容については ipynb フォルダに入っている calc_fb_hops.ipynb を参照してください。
 
 詳細は省きますが、ストラクチャーさんが公開しているコードでは以下のように断面を入れると許容応力度を返してくれます。
 
-これは先ほどの断面最適化の部分で書いたような単純な断面積からくるものだけでなく、以下の項目も考慮した日本建築学会の規基準によるものになっています。
+これは先ほどの断面最適化の部分で書いたような単純な断面性能からくるものだけでなく、以下の項目も考慮した日本建築学会の規基準によるものになっています。
 
 - 横座屈
 - 曲げ勾配による補正係数
@@ -417,7 +458,16 @@ print('fb = ' + str(fb) + ', Ma = ' + str(ma))
 ![calc_ma](./image/calc_ma.jpg)
 
 C# スクリプトでのコードは以下になります。
-ベースは上記の断面最適化で使ったものになります。
+ベースは上記の断面最適化で使ったものです。
+
+上記の内容から、Karamba3d から以下のものを取得して出力すれば良いことがわかりますのでそれを作成することを考えます。
+
+- 断面情報を取得してフォーマットに沿った文字列
+- 部材長
+  - 横座屈長が計算できればなおよい
+- 曲げ勾配
+  - これは結果がどうなるかわかっているので安全側で基準の最大値にする
+- 対象部材の最大曲げモーメントまたは最大曲げ応力
 
 ```cs
 using System.Linq;
