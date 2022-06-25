@@ -8,15 +8,13 @@ compute_rhino3d.Util.url = 'http://localhost:6500/'
 
 # create DataTree for each input
 input_trees = []
-tree = gh.DataTree("A")
-tree.Append([0], ["10.0"])
+tree = gh.DataTree("MoveHeight")
+tree.Append([{0}], ["885.0", "564.0", "818.0", "699.0", "885.0",
+            "1244.0", "1287.0", "1330.0", "955.0", "905.0"])
 input_trees.append(tree)
 
-tree = gh.DataTree("B")
-tree.Append([0], ["5.0"])
-input_trees.append(tree)
-
-output = gh.EvaluateDefinition('PATH/TO/Add.gh', input_trees)
+output = gh.EvaluateDefinition(
+    'C:\\Users\\hiroa\\Desktop\\DigitalFUTURES\\Day3\\Grasshopper\\ShellOpt.gh', input_trees)
 errors = output['errors']
 if errors:
     print('ERRORS')

@@ -170,7 +170,7 @@ for value in values:
 - https://www.python.org/downloads/
 
 なお私の環境では Python 3.9 を使用していますが最新版の 3.10 でも問題なく動くと思われます。
-考のコードは python のフォルダにある Add.py、または Notebook の場合は ipynb フォルダに入っています。
+このコードは python のフォルダにある Add.py、または Notebook の場合は ipynb フォルダに入っています。
 
 #### 環境の構築
 
@@ -422,7 +422,173 @@ vis.show()
 
 ### 連携による最適化
 
+これまでやってきたことを組み合わせることで、Python コード側から Grasshopper を動かし最適化を実行することができるようになります。
+Shell の最適化を実行したモデルを使って Python から最適化を実行します。
 
+注意点としては、Rhino 上のデータを参照している場合は、Grasshopper 単体で動作させて結果を評価しているので、 Internalize するようにしてください。
+Python から流す前は Hops などを使って RhinoCompute で求める結果が得られるか確認してください。
+Hops へのインプットがリストなので、入力は Tree に対応するように設定します。
+
+![HopsShellOpt](./image/HopsShellOpt.jpg)
+
+まず Hops から出力されるサンプルの Python コードを実行すると以下になります。
+設定したように求めた Brep のデータと弾性ひずみエネルギーの結果が取得できます。
+
+```python
+# pip install compute_rhino3d and rhino3dm
+import compute_rhino3d.Util
+import compute_rhino3d.Grasshopper as gh
+import rhino3dm
+import json
+
+compute_rhino3d.Util.url = 'http://localhost:6500/'
+
+# create DataTree for each input
+input_trees = []
+tree = gh.DataTree("MoveHeight")
+tree.Append([{0}], ["885.0", "564.0", "818.0", "699.0", "885.0",
+            "1244.0", "1287.0", "1330.0", "955.0", "905.0"])
+input_trees.append(tree)
+
+output = gh.EvaluateDefinition('Path/to/ShellOpt.gh', input_trees)
+errors = output['errors']
+if errors:
+    print('ERRORS')
+    for error in errors:
+        print(error)
+warnings = output['warnings']
+if warnings:
+    print('WARNINGS')
+    for warning in warnings:
+        print(warning)
+
+values = output['values']
+for value in values:
+    name = value['ParamName']
+    inner_tree = value['InnerTree']
+    print(name)
+    for path in inner_tree:
+        print(path)
+        values_at_path = inner_tree[path]
+        for value_at_path in values_at_path:
+            data = value_at_path['data']
+            if isinstance(data, str) and 'archive3dm' in data:
+                obj = rhino3dm.CommonObject.Decode(json.loads(data))
+                print(obj)
+            else:
+                print(data)
+
+# 結果
+# RH_OUT:Brep
+# {0;0;0}
+# <rhino3dm._rhino3dm.Brep object at 0x000002DE8FD7F5B0>
+# RH_OUT:DEnergy
+# {0;0;0;0;0;0}
+# 2.7562663688079203E-05
+```
+
+上記を Optuna から最適化が実行できるように書き換えていきます。
+上では NSGA-II を使った例を出しましたが、別の例としてベイズ最適化を使用した TPE アルゴリズムで実行した場合を示しています。
+
+今回の Shell の最適化のような処理が重い場合はベイズ最適化を使用することをおススメします。
+ただしベイズ最適化は変数が多い場合が得意ではないため、入力する変数の数によって選択する必要があります。
+各アルゴリズムでの計算コストは以下です。
+必ずしも理解する必要はありませんが、アルゴリズムを決定する一要因として頭に入れておくとよいでしょう。
+
+- Random: $O(d)$
+- TPE: $O(dn \log{n})$
+- NSGA-II: $O(mnp)$
+
+d は探索空間の次元（＝変数の数）、n は完了したトライアルの数、ｍ は目的関数の数、p はポピュレーションサイズです。
+
+https://optuna.readthedocs.io/en/latest/reference/samplers/index.html
+
+TPE でわかりやすい注意すべき点は、n_startup_trials の値です。
+この値になるまではランダムサンプリングが行われます。
+ランダムサンプリングは名称の通りランダムに次の値を決定しており、最小化などを行っていないサンプリングです。
+
+元論文では、`変数の数 × 11 - 1` が推奨されています。
+今回やる Shell の最適化では変数が 10 個あるので、109 が推奨値になりますが、100 トライアルで終了させたいのでここでは 50 を n_startup_trials にしています。
+
+作成したコードは以下です。
+
+```python
+import compute_rhino3d.Util
+import compute_rhino3d.Grasshopper as gh
+import rhino3dm
+import json
+import sys
+import optuna
+
+compute_rhino3d.Util.url = 'http://localhost:6500/'
+
+
+def objective(trial):
+    variables = []
+    result = sys.float_info.max
+
+    for i in range(10):
+        variables.append(trial.suggest_uniform('genepool' + str(i), -10, 10))
+
+    return float(run_gh(variables)[1])
+
+
+def run_gh(variables):
+    result = []
+
+    input_trees = []
+    tree = gh.DataTree("MoveHeight")
+    tree.Append([{0}], variables)
+    input_trees.append(tree)
+
+    output = gh.EvaluateDefinition('Path\\to\\ShellOpt.gh', input_trees)
+    errors = output['errors']
+    if errors:
+        print('ERRORS')
+        for error in errors:
+            print(error)
+    warnings = output['warnings']
+    if warnings:
+        print('WARNINGS')
+        for warning in warnings:
+            print(warning)
+
+    values = output['values']
+    for value in values:
+        name = value['ParamName']
+        inner_tree = value['InnerTree']
+        for path in inner_tree:
+            values_at_path = inner_tree[path]
+            for value_at_path in values_at_path:
+                data = value_at_path['data']
+                if isinstance(data, str) and 'archive3dm' in data:
+                    obj = rhino3dm.CommonObject.Decode(json.loads(data))
+                    result.append(obj)
+                else:
+                    result.append(data)
+
+    return result 
+
+
+if __name__ == "__main__":
+    sampler = optuna.samplers.TPESampler(
+        n_startup_trials=50,
+    )
+    study = optuna.create_study(sampler=sampler)
+    study.optimize(objective, n_trials=100)
+
+    print("Best param: ", study.best_params)
+    print("Best value: ", study.best_value)
+
+    vis = optuna.visualization.plot_optimization_history(study)
+    vis.show()
+
+
+# 結果 ランダムが含まれているので人によって違う結果が出ていると思います。
+# Best param:  {'x0': -9.461240796930394, 'x1': 7.822585899093222, 'x2': -0.5868857354926643, 'x3': 8.104354176505808, 'x4': 7.543290616830272, 'x5': 5.58636025609701, 'x6': -1.5275891437210767, 'x7': 4.274577664251453, 'x8': -5.97323876201837, 'x9': -1.8097953095751154}
+# Best value:  0.0001080773215339902
+
+```
 
 ### Deep Dive
 
