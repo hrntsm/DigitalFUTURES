@@ -45,7 +45,7 @@ Galapagos は Grasshopper にデフォルトで搭載されている最適化ソ
 機能としては遺伝的アルゴリズムと焼きなまし法による単一目的最適化が搭載されています。
 
 最適化を実行すると解析を流すとだいぶ重いです。
-こういった重い最適化は後で紹介する Tunny に実装しているベイズ最適化を実行することをおススメします。
+こういった重い最適化は後で紹介する Tunny に実装しているベイズ最適化を実行すると良い場合があるため選択肢として覚えておいてください。
 
 ### Wallacei の紹介
 
@@ -517,27 +517,31 @@ import compute_rhino3d.Util
 import compute_rhino3d.Grasshopper as gh
 import rhino3dm
 import json
-import sys
 import optuna
 
 compute_rhino3d.Util.url = 'http://localhost:6500/'
 
 
 def objective(trial):
+    ''' 目的関数の作成
+    '''
     variables = []
-    result = sys.float_info.max
 
     for i in range(10):
-        variables.append(trial.suggest_uniform('genepool' + str(i), -10, 10))
+        variables.append(trial.suggest_uniform('genepool' + str(i), 500, 1500))
 
-    return float(run_gh(variables)[1])
+    result = run_gh(variables)
+    return float(result[1])
 
 
 def run_gh(variables):
+    ''' Grasshopper でのモデル評価の実行
+    '''
     result = []
 
     input_trees = []
     tree = gh.DataTree("MoveHeight")
+
     tree.Append([{0}], variables)
     input_trees.append(tree)
 
@@ -567,15 +571,36 @@ def run_gh(variables):
                 else:
                     result.append(data)
 
-    return result 
+    return result
+
+
+def save_result(study):
+    ''' 結果の保存
+    '''
+    best_variables = [float(v) for v in study.best_params.values()]
+    save_rhino_model(best_variables)
+
+    with open('param.json', 'w') as f:
+        json.dump(study.best_params, f)
+    with open('value.json', 'w') as f:
+        json.dump(study.best_value, f)
+
+
+def save_rhino_model(best_variables):
+    ''' 作成したのモデルの 3dm での保存
+    '''
+    brep = run_gh(best_variables)[0]
+
+    doc = rhino3dm.File3dm()
+    doc.Objects.Add(brep)
+    doc.Write("./test.3dm", 7)
 
 
 if __name__ == "__main__":
-    sampler = optuna.samplers.TPESampler(
-        n_startup_trials=50,
-    )
-    study = optuna.create_study(sampler=sampler)
-    study.optimize(objective, n_trials=100)
+    sampler = optuna.samplers.TPESampler(n_startup_trials=50,)
+    study = optuna.create_study(
+        sampler=sampler, storage='sqlite:///optuna.db', load_if_exists=True, study_name='test')
+    study.optimize(objective, n_trials=10)
 
     print("Best param: ", study.best_params)
     print("Best value: ", study.best_value)
@@ -583,12 +608,15 @@ if __name__ == "__main__":
     vis = optuna.visualization.plot_optimization_history(study)
     vis.show()
 
-
-# 結果 ランダムが含まれているので人によって違う結果が出ていると思います。
-# Best param:  {'x0': -9.461240796930394, 'x1': 7.822585899093222, 'x2': -0.5868857354926643, 'x3': 8.104354176505808, 'x4': 7.543290616830272, 'x5': 5.58636025609701, 'x6': -1.5275891437210767, 'x7': 4.274577664251453, 'x8': -5.97323876201837, 'x9': -1.8097953095751154}
-# Best value:  0.0001080773215339902
+    save_result(study)
 
 ```
+
+このコードでは最終的に結果の数字だけコンソールに出力しても結果が消えてしまうので、結果として返ってきている Brep を 3dm ファイル、変数と目的関数の値を json として保存するようにしています。
+
+optuna は最適化のデータを sqlite のデータベースとして保存して使用しています。
+`study = optuna.create_study(sampler=sampler, storage='sqlite:///optuna.db', load_if_exists=True, study_name='test')` の箇所で `optuna.db`という名前で sqlite のデータベースを作成しています。
+これがあるので、一度最適化が終了した後、その結果を確認し収束していないことがわかった後でも、その情報を使って続けて最適化を行うことができます。
 
 ### Deep Dive
 

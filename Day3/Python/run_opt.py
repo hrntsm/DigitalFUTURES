@@ -27,13 +27,10 @@ def run_gh(variables):
     input_trees = []
     tree = gh.DataTree("MoveHeight")
 
-    # for i in range(10):
-    #     tree.Append([{0}], variables[i])
     tree.Append([{0}], variables)
     input_trees.append(tree)
 
-    output = gh.EvaluateDefinition(
-        'C:\\Users\\hiroa\\Desktop\\DigitalFUTURES\\Day3\\Grasshopper\\ShellOpt.gh', input_trees)
+    output = gh.EvaluateDefinition('Path\\to\\ShellOpt.gh', input_trees)
     errors = output['errors']
     if errors:
         print('ERRORS')
@@ -62,6 +59,18 @@ def run_gh(variables):
     return result
 
 
+def save_result(study):
+    ''' 結果の保存
+    '''
+    best_variables = [float(v) for v in study.best_params.values()]
+    save_rhino_model(best_variables)
+
+    with open('param.json', 'w') as f:
+        json.dump(study.best_params, f)
+    with open('value.json', 'w') as f:
+        json.dump(study.best_value, f)
+
+
 def save_rhino_model(best_variables):
     ''' 作成したのモデルの 3dm での保存 
     '''
@@ -73,10 +82,9 @@ def save_rhino_model(best_variables):
 
 
 if __name__ == "__main__":
-    sampler = optuna.samplers.TPESampler(
-        n_startup_trials=50,
-    )
-    study = optuna.create_study(sampler=sampler)
+    sampler = optuna.samplers.TPESampler(n_startup_trials=50)
+    study = optuna.create_study(
+        sampler=sampler, storage='sqlite:///optuna.db', load_if_exists=True, study_name='test')
     study.optimize(objective, n_trials=10)
 
     print("Best param: ", study.best_params)
@@ -85,5 +93,4 @@ if __name__ == "__main__":
     vis = optuna.visualization.plot_optimization_history(study)
     vis.show()
 
-    best_variables = [float(v) for v in study.best_params.values()]
-    save_rhino_model(best_variables)
+    save_result(study)
