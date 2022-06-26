@@ -180,12 +180,49 @@ C# はオブジェクト指向の言語と言われています。
 
 ここまでの C# は、ウェブのサービス上で実行してきましたが、Grasshopper でも C# を使ってコンポーネントを作成することができます。
 
-//TODO: つくる
+Math タブの Script の箇所にコンポーネントが存在し、以下の 3 言語が公式でサポートされています。
+
+- C#
+- IronPython
+  - 通常の Python とは少し違います
+- VB.NET
+
+![Script component](./image/script.jpg)
+
+ここでは C# を使って、Grasshopper コンポーネントを作成していきます。
+以下のように通常のコンポーネントで簡単にできる Brep を move させることをコードで書いていきます。
+
+![duplicate brep](./image/duplicate_brep.jpg)
+
+各コードの内容は以下です。
+Grasshopper でコンポーネントをどう使ってやりたい操作を実現するかいくつか方法があるのと同様に、コードでの書き方にもいくつか方法があります。
+
+```cs
+private void RunScript(Brep brep, double n, int c, ref object A)
+{
+  var result = new List<Brep>();
+  for(var i = 0;i < c; i++)
+  {
+    Brep dupBrep = brep.DuplicateBrep();
+    result.Add(dupBrep);
+    brep.Translate(0, 0, n);
+  }
+
+  A = result;
+}
+```
+
+プログラミング言語から、Grasshopper を操作するにはどのような機能が提供されているか確認する必要があります。
+mcneel から API(Application Programming Interface) が公開されており、それを見ながら機能を確認し実装していきます。
+Grasshopper そのものの機能を使うことは少ないので、基本的には RhinoCommon を使っていきます。
+
+- [RhinoCommon API](https://developer.rhino3d.com/api/RhinoCommon/html/R_Project_RhinoCommon.htm)
+- [Grasshopper API](https://developer.rhino3d.com/api/grasshopper/html/723c01da-9986-4db2-8f53-6f3a7494df75.htm)
 
 ## Karamba3D のカスタマイズ
 
 上記でやったカスタムコンポーネントをさらに発展させることで、Karamba3d をカスタムすることができます。
-カスタマイズで参照する Karamba3d の SDK は以下になります。
+カスタマイズで参照する Karamba3d の API は以下になります。
 
 - https://www.karamba3d.com/help/2-2-0/html/b2fe4d67-e7e2-4f96-bc84-ecd423bde1a7.htm
 
