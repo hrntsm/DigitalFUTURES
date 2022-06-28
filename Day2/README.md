@@ -15,6 +15,10 @@ Karamba.ini について簡単な説明をする。
 
 ## C# の基礎
 
+C# は Microsoft が開発してるプログラミング言語です
+
+- https://docs.microsoft.com/ja-jp/dotnet/csharp/tour-of-csharp/
+
 環境構築がうまくいかないず手間取ることもあるので、以下のブラウザ上で C# を実行できるサービス [.NET Fiddle](https://dotnetfiddle.net/) を使って基礎について振れていきます。
 
 ### Hello World をする
@@ -466,6 +470,9 @@ public class Script_Instance : GH_ScriptInstance
 
 Hops を使うと既存のコードと Grasshopper を連携させることができます。
 なおここでは既存のコードとして Python を利用します。
+またはローカルの環境で JupyterNoteBook を使ってもよいですが、Google colab を使ってもよいです。
+
+- https://colab.research.google.com/?hl=ja
 
 ㈱ストラクチャーさんが Python の鉄骨梁の断面算定プログラムを公開しているのでこれを Hops で使って Karamba3d で得た応力を使って断面算定をする例を紹介します。
 
